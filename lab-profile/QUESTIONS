@@ -1,0 +1,21 @@
+UNBLACKEDGES
+
+Please put answers to questions here.
+
+  1. What fraction of time is spent in I/O as compared with removing
+     black edges?
+  
+  2. How long does
+  
+        time ./unblackedges 
+  
+     take?
+  
+  3. After making changes requested in the lab handout (steps 1-4), what
+     happened to the total time?
+  
+  4. What happened to the fraction of time spent in Bit_put?
+  
+  5. Since the implementation of Bit_put has not been improved, what has
+     changed?
+  
