@@ -1,6 +1,6 @@
 #
 # Makefile for the Profile lab
-# 
+#
 CC = gcc
 
 IFLAGS  = -I/comp/40/build/include -I/usr/sup/cii40/include/cii
@@ -12,7 +12,7 @@ EXECS   = unblackedges
 
 all: $(EXECS)
 
-unblackedges: unblackmain.o pbmio.o unblackedges-lab.o bit2.o
+unblackedges: unblackmain.o pbmio.o unblackedges-queue.o bit2.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 # To get *any* .o file, compile its .c file with the following rule.
@@ -21,4 +21,3 @@ unblackedges: unblackmain.o pbmio.o unblackedges-lab.o bit2.o
 
 clean:
 	rm -f $(EXECS)  *.o
-

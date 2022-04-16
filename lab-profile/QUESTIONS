@@ -5,17 +5,26 @@ Please put answers to questions here.
   1. What fraction of time is spent in I/O as compared with removing
      black edges?
   
+      57% on IO, 43% on unblacking edges
+
   2. How long does
   
         time ./unblackedges 
   
      take?
+
+     1.33 seconds
   
   3. After making changes requested in the lab handout (steps 1-4), what
      happened to the total time?
   
+      it is 0.01 seconds faster
+   
   4. What happened to the fraction of time spent in Bit_put?
-  
+   
+      It stayed the same
+
   5. Since the implementation of Bit_put has not been improved, what has
      changed?
   
+      Nothing, honnestly
