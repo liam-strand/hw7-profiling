@@ -24,7 +24,7 @@ CFLAGS = -O2 -std=c99 -Wall -Wextra -Werror -Wfatal-errors -pedantic $(IFLAGS)
 LDFLAGS = -O2 -L/comp/40/build/lib -L/usr/sup/cii40/lib64
 
 # Libraries needed for linking
-LDLIBS = -lbitpack -lcii40-O2 -lm
+LDLIBS = -lcii40-O2 -lm
 
 # Collect all .h files in your directory.
 # This way, you can never forget to add
@@ -34,7 +34,7 @@ LDLIBS = -lbitpack -lcii40-O2 -lm
 # he agrees with Noah that you'll probably spend hours
 # debugging if you forget to put .h files in your
 # dependency list.
-INCLUDES = $(shell echo *.h) 
+INCLUDES = $(shell echo *.h)
 
 ############### Build ###############
 
@@ -49,25 +49,8 @@ all: um
 
 ## Linking step (.o -> executable program)
 
-um: main.o prepare.o um_state.o instructions.o
+um: bitpack.o main.o prepare.o um_state.o instructions.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
-
-############### Testing ###############
-
-test: all
-	@echo -e "\n* * * * * * * * *\n* Begin" \
-	"Testing *\n* * * * * * * * *\n"
-	@python testing/test_um.py
-
-############### Utility ###############
-
-test-clean:
-	-rm -rf testing/output
-	mkdir testing/output
-
-check:
-	-@grep -n --color=auto '.\{80\}' *.h *.c Makefile README
-
-clean: test-clean
+clean:
 	-rm -f um *.o

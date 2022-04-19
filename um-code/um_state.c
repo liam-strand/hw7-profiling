@@ -10,7 +10,7 @@
  *
  * The implementation of the universal machine. Manages segmented memory and
  * instruction execution. Memory is cleaned up afterwards.
- * 
+ *
  */
 
 
@@ -20,7 +20,7 @@
 #include <mem.h>
 #include <seq.h>
 #include <assert.h>
-#include <bitpack.h>
+#include "bitpack.h"
 #include <uarray.h>
 
 #include "um_state.h"
@@ -78,13 +78,13 @@ void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p, Seq_T *recycled_p);
  *      Notes: Though several instructions do not require the use of all three
  *             registers, this function handles most of the cases.
  */
-void unwrap_instruction(uint32_t  inst, uint32_t *op_p, uint32_t *ra_p, 
+void unwrap_instruction(uint32_t  inst, uint32_t *op_p, uint32_t *ra_p,
                         uint32_t *rb_p, uint32_t *rc_p);
 
 /* prepare_lv
  *    Purpose: Unpacks a load_value instruction
  * Parameters: An instructio to unpack, pointers to...
- *               - a place to store the destination register id 
+ *               - a place to store the destination register id
  *               - a place to store the value to load
  *    Returns: none
  *    Effects: Populates reg_id and value
@@ -132,7 +132,7 @@ void deep_free_int(Seq_T seq);
  * 2. Initialize the program counter and registers to hold 0
  * 3. Initialize the Hanson sequence holding the other segments to hold
  *    a single NULL pointer.
- * 4. Initialize The Hanson sequence holding the recycled 
+ * 4. Initialize The Hanson sequence holding the recycled
  */
 extern void um_run(FILE *input_file, char *file_path)
 {
@@ -147,7 +147,7 @@ extern void um_run(FILE *input_file, char *file_path)
 
     Seq_T recycled_ids = Seq_new(5);
 
-    execute_instructions(&prog_counter, &prog_seg, r, other_segs, 
+    execute_instructions(&prog_counter, &prog_seg, r, other_segs,
                                                       recycled_ids);
 
     clean_up(&prog_seg, &other_segs, &recycled_ids);
@@ -178,30 +178,30 @@ void execute_instructions(size_t   *program_counter,
         (*program_counter)++;
 
         switch(op) {
-            
+
             /* Conditional Move */
             case 0:
                 I_c_mov(&regs[rb], &regs[ra], &regs[rc]);
                 break;
-            
+
             /* Segmented Load */
             case 1:
-                I_seg_load(seg_source(*prog_seg, other_segs, 
-                                      regs[rb], regs[rc]), &regs[ra]); 
+                I_seg_load(seg_source(*prog_seg, other_segs,
+                                      regs[rb], regs[rc]), &regs[ra]);
                 break;
-            
+
             /* Segmented Store */
             case 2:
-                I_seg_store(&regs[rc], 
-                            seg_source(*prog_seg, other_segs, regs[ra], 
-                                                              regs[rb])); 
+                I_seg_store(&regs[rc],
+                            seg_source(*prog_seg, other_segs, regs[ra],
+                                                              regs[rb]));
                 break;
-            
+
             /* Add */
             case 3:
                 I_add(&regs[rb], &regs[rc], &regs[ra]);
                 break;
-            
+
             /* Multiply */
             case 4:
                 I_mult(&regs[rb], &regs[rc], &regs[ra]);
@@ -215,12 +215,12 @@ void execute_instructions(size_t   *program_counter,
             /* NAND */
             case 6:
                 I_nand(&regs[rb], &regs[rc], &regs[ra]);
-                break; 
+                break;
 
             /* Break */
             case 7:
                 shouldContinue = false;
-                break; 
+                break;
 
             /* Map Segment */
             case 8:
@@ -244,7 +244,7 @@ void execute_instructions(size_t   *program_counter,
 
             /* Load Program */
             case 12:
-                I_load_p(prog_seg, other_segs, &regs[rb], 
+                I_load_p(prog_seg, other_segs, &regs[rb],
                         &regs[rc], program_counter);
                 break;
 
@@ -257,13 +257,13 @@ void execute_instructions(size_t   *program_counter,
                 shouldContinue = false;
         }
     }
-}   
+}
 
 /* unwrap_instruction
  * Un-bitpack the opcode and the three registers and store in referenced
  * locations.
  */
-void unwrap_instruction(uint32_t inst, uint32_t *op_p, uint32_t *ra_p, 
+void unwrap_instruction(uint32_t inst, uint32_t *op_p, uint32_t *ra_p,
                              uint32_t *rb_p, uint32_t *rc_p)
 {
     *op_p = Bitpack_getu(inst, 4, 28);
@@ -273,7 +273,7 @@ void unwrap_instruction(uint32_t inst, uint32_t *op_p, uint32_t *ra_p,
 }
 
 /* prepare_lv
- * The special un-bitpack for the load value instruction. Un-bitpacks the 
+ * The special un-bitpack for the load value instruction. Un-bitpacks the
  * destination register and the loading value, stores in referenced variables.
  */
 void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value)
@@ -312,7 +312,7 @@ void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p, Seq_T *recycled_p)
     assert(prog_seg_p   != NULL && *prog_seg_p   != NULL);
     assert(other_segs_p != NULL && *other_segs_p != NULL);
     assert(recycled_p   != NULL && *recycled_p   != NULL);
-    
+
     FREE(*prog_seg_p);
 
     deep_free_uarray(*other_segs_p);
@@ -351,7 +351,7 @@ void deep_free_uarray(Seq_T seq)
 void deep_free_int(Seq_T seq)
 {
     assert(seq != NULL);
-    
+
     unsigned len = Seq_length(seq);
     for (unsigned i = 0; i < len; i++) {
         int *n = (int *)Seq_get(seq, i);

@@ -8,7 +8,7 @@
  *
  * On: April 2022
  *
- * Implements a function to parse a .um file and initilize the program segment 
+ * Implements a function to parse a .um file and initilize the program segment
  * of the universal machine.
  */
 
@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <mem.h>
-#include <bitpack.h>
+#include "bitpack.h"
 
 #include "prepare.h"
 
@@ -39,7 +39,7 @@ static const unsigned BYTE_SIZE = 8;
 uint32_t read_one_instruction(FILE *input_file);
 
 /* parse_file
- * Goes through input file and pushes instructions to add to zero segment 
+ * Goes through input file and pushes instructions to add to zero segment
  * whose length was obtained through system stat interface
  */
 extern uint32_t *parse_file(FILE *input_file, char *file_path)
@@ -59,7 +59,7 @@ extern uint32_t *parse_file(FILE *input_file, char *file_path)
 }
 
 /* read_one_instruction
- * Reads one instruction (4 bytes) from the opened FILE pointer, bitpacks it 
+ * Reads one instruction (4 bytes) from the opened FILE pointer, bitpacks it
  * into a uint32, then returns it
  */
 uint32_t read_one_instruction(FILE *input_file)

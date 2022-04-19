@@ -91,7 +91,7 @@ static inline int64_t sra(uint64_t word, unsigned bits)
 //                    64 - width);
 // }
 
-static inline uint64_t Bitpack_getu(uint64_t word, unsigned width, unsigned lsb)
+extern inline uint64_t Bitpack_getu(uint64_t word, unsigned width, unsigned lsb)
 {
         // assert(width <= 64);
         unsigned hi = lsb + width; /* one beyond the most significant bit */
@@ -102,7 +102,7 @@ static inline uint64_t Bitpack_getu(uint64_t word, unsigned width, unsigned lsb)
 }
 
 /****************************************************************/
-static inline uint64_t Bitpack_newu(uint64_t word, unsigned width, unsigned lsb,
+extern inline uint64_t Bitpack_newu(uint64_t word, unsigned width, unsigned lsb,
                       uint64_t value)
 {
         // assert(width <= 64);
