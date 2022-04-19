@@ -173,7 +173,8 @@ void execute_instructions(size_t   *program_counter,
         uint32_t inst = (*prog_seg)[*program_counter];
 
         uint32_t op, ra, rb, rc, value;
-        unwrap_instruction(inst, &op, &ra, &rb, &rc);
+        //unwrap_instruction(inst, &op, &ra, &rb, &rc);
+        op = Bitpack_getu(inst, 4, 28);
 
         (*program_counter)++;
 
@@ -181,17 +182,26 @@ void execute_instructions(size_t   *program_counter,
 
             /* Conditional Move */
             case 0:
+                ra = Bitpack_getu(inst, 3,  6);
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_c_mov(&regs[rb], &regs[ra], &regs[rc]);
                 break;
 
             /* Segmented Load */
             case 1:
+                ra = Bitpack_getu(inst, 3,  6);
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_seg_load(seg_source(*prog_seg, other_segs,
                                       regs[rb], regs[rc]), &regs[ra]);
                 break;
 
             /* Segmented Store */
             case 2:
+                ra = Bitpack_getu(inst, 3,  6);
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_seg_store(&regs[rc],
                             seg_source(*prog_seg, other_segs, regs[ra],
                                                               regs[rb]));
@@ -199,21 +209,33 @@ void execute_instructions(size_t   *program_counter,
 
             /* Add */
             case 3:
+                ra = Bitpack_getu(inst, 3,  6);
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_add(&regs[rb], &regs[rc], &regs[ra]);
                 break;
 
             /* Multiply */
             case 4:
+                ra = Bitpack_getu(inst, 3,  6);
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_mult(&regs[rb], &regs[rc], &regs[ra]);
                 break;
 
             /* Integer Divide */
             case 5:
+                ra = Bitpack_getu(inst, 3,  6);
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_div(&regs[rb], &regs[rc], &regs[ra]);
                 break;
 
             /* NAND */
             case 6:
+                ra = Bitpack_getu(inst, 3,  6);
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_nand(&regs[rb], &regs[rc], &regs[ra]);
                 break;
 
@@ -224,33 +246,41 @@ void execute_instructions(size_t   *program_counter,
 
             /* Map Segment */
             case 8:
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_map(other_segs, available_indices, &regs[rb], regs[rc]);
                 break;
 
             /* Unmap Segment */
             case 9:
+                rc = Bitpack_getu(inst, 3,  0);
                 I_unmap(other_segs, available_indices, &regs[rc]);
                 break;
 
             /* Output */
             case 10:
+                rc = Bitpack_getu(inst, 3,  0);
                 I_out(&regs[rc]);
                 break;
 
             /* Input */
             case 11:
+                rc = Bitpack_getu(inst, 3,  0);
                 I_in(&regs[rc]);
                 break;
 
             /* Load Program */
             case 12:
+                rb = Bitpack_getu(inst, 3,  3);
+                rc = Bitpack_getu(inst, 3,  0);
                 I_load_p(prog_seg, other_segs, &regs[rb],
                         &regs[rc], program_counter);
                 break;
 
             /* Load Value */
             case 13:
-                prepare_lv(inst, &ra, &value);
+                ra = Bitpack_getu(inst, 3, 25);
+                value  = Bitpack_getu(inst, 25, 0);
                 I_load_v(value, &regs[ra]);
                 break;
             default:
