@@ -49,7 +49,7 @@ all: um
 
 ## Linking step (.o -> executable program)
 
-um: bitpack.o main.o prepare.o um_state.o instructions.o
+um: main.o prepare.o um_state.o instructions.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 clean:

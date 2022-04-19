@@ -19,11 +19,26 @@
 #include <unistd.h>
 #include <assert.h>
 #include <mem.h>
-#include "bitpack.h"
+// #include "bitpack.h"
 
 #include "prepare.h"
 
 static const unsigned BYTE_SIZE = 8;
+
+extern inline uint32_t Bitpack_newu(uint32_t word, unsigned width, unsigned lsb,
+                      uint32_t value)
+{
+        // assert(width <= 64);
+        unsigned hi = lsb + width; /* one beyond the most significant bit */
+        // assert(hi <= 64);
+        // if (!Bitpack_fitsu(value, width))
+        //         RAISE(Bitpack_Overflow);
+        return ((word >> hi) << hi) |((word << (32 - lsb)) >> (32 - lsb)) | value << lsb;
+        //
+        // return shl(shr(word, hi), hi)                 /* high part */
+        //         | shr(shl(word, 32 - lsb), 32 - lsb)  /* low part  */
+        //         | (value << lsb);                     /* new part  */
+}
 
 /* read_one_instruction
  *    Purpose: Reads chars from input file and pushes 32-bit encoded as output
