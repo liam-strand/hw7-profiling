@@ -1,0 +1,189 @@
+README 
+Identifies you and your programming partner by name
+
+Liam Strand (lstran01) & Matt Ung (mung01)
+
+– Acknowledges help you may have received from or collaborative work you may 
+have undertaken with others
+
+Asking Piazza Questions
+Randy Dang, always
+
+– Identifies what has been correctly implemented and what has not
+
+As far as we know, we correctly implemented all instructions and the
+program as a whole correctly.
+
+– Briefly enumerates any significant departures from your design
+
+We haven't changed anything from the design document besides adding some 
+helper functions like for reading one instruction or helper for file 
+authentication in the main.
+
+– Succinctly describes the architecture of your system. Identify the modules 
+used, what abstractions they implement, what secrets they know, and how they 
+relate to one another. Avoid narrative descriptions of the behavior of 
+particular modules.
+
+Our main (the driver) handles validating proper cmd line inputs and relies on
+the run function of the um_state module for functionality. Um_state contains 
+our main data structures through the 8-length array of 32-bit ints representing
+registers on the stack, the zero_seg (c-array of 32-bit ints on heap) for the 
+zero segment, a sequence of uarrays for the other segments, and a sequence 
+of ints to represented unmapped segments for later recycling. 
+
+It passes the zero_seg to our prepare module which parses the input file and 
+populates the zero_seg with the 32-bit instructions from the input file, and
+it later passes this back to um_state module for use in execute instructions 
+(a function of um_state). Execute instructions goes through the zero segment
+and un-bitpacks the registers and utilizes a switch statement to execute 
+instructions accordingly. The switch statement is run in a while loop 
+that ends when the halt statement is hit by switch a boolean used as the 
+condition for the while loop.
+
+Within the switch, the um_state module execute function calls functions from 
+our instruction module which acts upon our registers and segments to 
+execute the 14 defined functions of the universal machine. Following a 
+proper halt to our program (given a proper um program), we make sure to 
+deallocate all our heap structures using the clean up function making sure to
+prevent memory leaks through our use of mallocs and Hanson data structures.
+
+– Explain how long it takes your UM to execute 50 million instructions, and 
+  how you know
+  
+    The midmark.um benchmark is 85070522 instructions, we know this because we
+    implimented a counter that counted each instruction as the program read it.
+
+    This benchmark took 3947538258 nanoseconds to run, excluding O(1) set-up 
+    and clean-up operations.
+
+    Using these two values, we calculated the time-per-instruction value, then 
+    we multiplied that by 50 million to get the time...
+
+    2.32 seconds!
+  
+– Mention each UM unit test (from UMTESTS) by name, explaining what each one 
+  tests and how
+  
+  halt_test.um
+
+    Tests that the program can halt successfully.
+
+  -----
+
+  input_test.um
+
+    Tests that the program can read input and produce output successfully.
+
+  -----
+
+  and_0_255_test.um
+  and_16000000_255_test.um
+  and_24000000_255_test.um
+  and_32000000_255_test.um
+  and_8000000_255_test.um
+  or_0_0_test.um
+  or_128_0_test.um
+  or_192_0_test.um
+  or_64_0_test.um
+
+    Logical tests that confirm that the NAND instruction performs correctly by
+    expressing other boolean expressions (AND and OR) with NAND.
+
+  -----
+
+  add_test.um
+  add_0_10000000_test.um
+  add_0_15000000_test.um
+  add_5000000_10000000_test.um
+  add_5000000_15000000_test.um
+
+    Tests that both very large and very small numbers can be added together.
+    Also verifies that overflows are handled consistently with the spec.
+
+  -----
+
+  mul_0_10000000_test.um
+  mul_0_15000000_test.um
+  mul_5000000_10000000_test.um
+  mul_5000000_15000000_test.um
+
+    Tests that very large and very small numbers can be multiplied together.
+    Also verifies that overflows are handled consistently with the spec.
+
+  -----
+  cmov_0_0test.um
+  cmov_0_1test.um
+  cmov_128_0test.um
+  cmov_128_1test.um
+  cmov_192_0test.um
+  cmov_192_1test.um
+  cmov_64_0test.um
+  cmov_64_1test.um
+
+    Tests that the conditional move instruction behaves consistently with the
+    program specification.
+
+  -----
+
+  combined_0_0_test.um
+  combined_0_64_test.um
+
+    A combined test that tests addition, multiplication, division, and NAND
+    to confirm that they behave well when interacting.
+
+  -----
+
+  load_seg_0_test.um
+  load_seg_128_test.um
+  load_seg_192_test.um
+  load_seg_64_test.um
+
+    Verifies that data can be stored in and loaded from segments.
+  
+  -----
+
+  prog_load_test.um
+  
+    A control flow test. Tests that the program-load instruction can
+    load from a foreign segment into the program segment and execute code.
+  
+  -----
+
+  seg_big_map_load_test.um
+
+    Maps a big segment, loads it full of values, then prints them. Tests that
+    large segments can be mapped successfully.
+
+  -----
+
+  seg_map_stress_test.um
+
+    Map many segments. Tests that many segments can be handeled performantly.
+
+  -----
+
+  seg_unmap_stress_test.um
+  
+    Map, then immidiately unmap, many small segments. Tests that segment
+    identifiers are successfully recycled.
+
+  -----
+
+- Other Testing (just in case you're currious)
+
+  Fail-state tests (CREs):
+  - Bad filename provided
+  - Incorrect executable invocation
+  - Asking for more memory than can be provided
+  - Invalid commands
+  
+– Says approximately how many hours you have spent analyzing the assignment
+  4 hours
+  
+– Says approximately how many hours you have spent preparing your design
+  4 hours
+  
+– Says approximately how many hours you have spent solving the problems after 
+  your analysis
+  8 hours
