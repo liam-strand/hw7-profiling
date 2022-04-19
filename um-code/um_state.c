@@ -127,6 +127,14 @@ void deep_free_uarray(Seq_T seq);
  */
 void deep_free_int(Seq_T seq);
 
+
+static inline uint32_t Bitpack_getu(uint32_t word, unsigned width, unsigned lsb)
+{
+    return (word << (32 - (lsb + width))) >> (32 - width);  
+}
+
+
+
 /* um_run
  * 1. Parse the input file and initialize the program segment
  * 2. Initialize the program counter and registers to hold 0

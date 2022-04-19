@@ -91,15 +91,15 @@ static inline int64_t sra(uint64_t word, unsigned bits)
 //                    64 - width);
 // }
 
-extern inline uint64_t Bitpack_getu(uint64_t word, unsigned width, unsigned lsb)
-{
-        // assert(width <= 64);
-        unsigned hi = lsb + width; /* one beyond the most significant bit */
-        // assert(hi <= 64);
-        /* different type of right shift */
-        return shr(shl(word, 64 - hi),
-                   64 - width);
-}
+// extern inline uint64_t Bitpack_getu(uint64_t word, unsigned width, unsigned lsb)
+// {
+        // // assert(width <= 64);
+        // unsigned hi = lsb + width; /* one beyond the most significant bit */
+        // // assert(hi <= 64);
+        // /* different type of right shift */
+        // return shr(shl(word, 64 - hi),
+                   // 64 - width);
+// }
 
 /****************************************************************/
 extern inline uint64_t Bitpack_newu(uint64_t word, unsigned width, unsigned lsb,
