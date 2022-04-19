@@ -20,7 +20,7 @@
 #include <mem.h>
 #include <seq.h>
 #include <assert.h>
-#include "bitpack.h"
+// #include "bitpack.h"
 #include <uarray.h>
 
 #include "um_state.h"
@@ -130,9 +130,8 @@ void deep_free_int(Seq_T seq);
 
 static inline uint32_t Bitpack_getu(uint32_t word, unsigned width, unsigned lsb)
 {
-    return (word << (32 - (lsb + width))) >> (32 - width);  
+    return (word << (32 - (lsb + width))) >> (32 - width);
 }
-
 
 
 /* um_run
