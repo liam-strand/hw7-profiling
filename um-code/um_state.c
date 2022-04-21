@@ -28,104 +28,27 @@
 #include "instructions.h"
 
 
-/* execute_instructions
- *    Purpose: Contains the main program loop. Reads through the program
- *             segment and executes instructions in order.
- * Parameters: Pointers to...
- *               - The program counter
- *               - The program segment
- *               - The registers
- *             Hanson Sequences containing...
- *               - The non-program segments
- *               - The recyclable indices
- *    Returns: none
- *    Effects: Modifies all arguments to reflect the state of the program as
- *             it is executed
- *       CREs: none
- *      Notes: none
- */
 void execute_instructions(size_t   *program_counter,
                           uint32_t **prog_seg,
                           uint32_t *regs,
                           Seq_T     other_segs,
                           Seq_T     available_indices);
 
-/* clean_up
- *    Purpose: Frees memory associated with heap-allocated data structures
- * Parameters: Pointers to...
- *               - The array holding the program (zero) segment
- *               - The Seq holding the other segments
- *               - The Seq holding recycled segment IDs
- *    Returns: none
- *    Effects: Recycles all memory associated with the data structures above.
- *             Additionally sets their values to NULL to prevent unwanted
- *             access of uninitialized memory.
- *       CREs: Any of the parameters, or their dereferences are NULL
- *      Notes: none
- */
 void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p, Seq_T *recycled_p);
 
-/* unwrap_instruction
- *    Purpose: Extracts the opcode and register indices from the instruction
- * Parameters: The instruction to be unwrapped
- *             Addresses of places to store the following...
- *               - The opcode
- *               - The indices of three registers
- *    Returns: none
- *    Effects: Stores an opcode and three register indices in the locations
- *             referenced by the last four parameters.
- *       CREs: none
- *      Notes: Though several instructions do not require the use of all three
- *             registers, this function handles most of the cases.
- */
 void unwrap_instruction(uint32_t  inst, uint32_t *op_p, uint32_t *ra_p,
                         uint32_t *rb_p, uint32_t *rc_p);
 
-/* prepare_lv
- *    Purpose: Unpacks a load_value instruction
- * Parameters: An instructio to unpack, pointers to...
- *               - a place to store the destination register id
- *               - a place to store the value to load
- *    Returns: none
- *    Effects: Populates reg_id and value
- *       CREs: none
- *      Notes: none
- */
 void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value);
 
-/* seg_source
- *    Purpose: Accesses a location in segmented memory given a segment ID and
- *             an index in that segment.
- * Parameters: A pointer to the program segment
- *             A Hanson Sequence of all other segments
- *             The segment number and desired index
- *    Returns: A pointer to the desired location in segmented memory
- *    Effects: none
- *       CREs: none
- *      Notes: none
- */
 uint32_t *seg_source(uint32_t *prog_seg, Seq_T    other_segs,
                      uint32_t  seg_num,  uint32_t seg_index);
 
-/* deep_free_uarray
- *    Purpose: Frees the uarrays referenced by a Hanson Sequence
- * Parameters: A Hanson Sequence
- *    Returns: none
- *    Effects: Frees everything pointed to by the parameter
- *       CREs: The parameter is NULL
- *      Notes: none
- */
 void deep_free_uarray(Seq_T seq);
 
-/* deep_free_int
- *    Purpose: Frees the ints referenced by a Hanson Sequence
- * Parameters: A Hanson Sequence
- *    Returns: none
- *    Effects: Frees everything pointed to by the parameter
- *       CREs: The parameter is NULL
- *      Notes: none
- */
 void deep_free_int(Seq_T seq);
+
+int expand(uint32_t **recycled, int capacity);
 
 
 static inline uint32_t Bitpack_getu(uint32_t word, unsigned width, unsigned lsb)
@@ -174,11 +97,20 @@ void execute_instructions(size_t   *program_counter,
                           Seq_T     available_indices)
 {
     bool shouldContinue = true;
-
+    (void) available_indices;
+    
+    int capacity = 1000;
+    int num_recycled = 0;
+    
+    uint32_t *recycled = malloc(sizeof(uint32_t) * 1000);
+    
     while (shouldContinue) {
-
+        
         uint32_t inst = (*prog_seg)[*program_counter];
-
+        
+        
+        
+        
         uint32_t op, ra, rb, rc, value;
         //unwrap_instruction(inst, &op, &ra, &rb, &rc);
         op = Bitpack_getu(inst, 4, 28);
@@ -255,13 +187,28 @@ void execute_instructions(size_t   *program_counter,
             case 8:
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_map(other_segs, available_indices, &regs[rb], regs[rc]);
+                
+                if (num_recycled != 0) {
+                    //fprintf(stderr, "%d \n", num_recycled);
+                    num_recycled -= 1;
+                    I_map(other_segs, recycled[num_recycled], &regs[rb], regs[rc]);
+                } 
+                else {
+                    I_map(other_segs, -1, &regs[rb], regs[rc]);
+                }
+                
                 break;
 
             /* Unmap Segment */
             case 9:
                 rc = Bitpack_getu(inst, 3,  0);
-                I_unmap(other_segs, available_indices, &regs[rc]);
+                
+                if (num_recycled == capacity) {
+                    capacity = expand(&recycled, capacity);
+                }
+                
+                recycled[num_recycled++] = regs[rc];
+                I_unmap(other_segs, &regs[rc]);
                 break;
 
             /* Output */
@@ -294,6 +241,14 @@ void execute_instructions(size_t   *program_counter,
                 shouldContinue = false;
         }
     }
+    
+}
+
+int expand(uint32_t **recycled, int capacity)
+{
+    *recycled = realloc(*recycled, (sizeof(uint32_t) * capacity * 2));
+    //assert(*recycled != NULL);
+    return capacity * 2;
 }
 
 /* unwrap_instruction

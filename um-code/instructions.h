@@ -131,8 +131,7 @@ extern void I_nand(uint32_t *reg_b, uint32_t *reg_c, uint32_t *dest);
  *       CREs: none
  *      Notes: none
  */
-extern void I_map(Seq_T     other_segs, Seq_T    available_indices, 
-                  uint32_t *dest,       uint32_t num_words);
+extern void I_map(Seq_T other_segs, int  available_index, uint32_t *dest, uint32_t num_words);
 
 /* Unmap
  *    Purpose: Accesses the other segs array and removes a segment indicated by
@@ -148,8 +147,7 @@ extern void I_map(Seq_T     other_segs, Seq_T    available_indices,
  *       CREs: none
  *      Notes: none
  */
-extern void I_unmap(Seq_T other_segs, Seq_T     available_indices, 
-                                      uint32_t *source);
+extern void I_unmap(Seq_T other_segs, uint32_t *source);
 
 /* Output
  *    Purpose: Prints to standard out the value in given register

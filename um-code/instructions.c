@@ -86,17 +86,14 @@ extern void I_nand(uint32_t *reg_b, uint32_t *reg_c, uint32_t *dest)
  * Creates a new segment and utilizes recycling older (unmapped) segments
  * to maintain neccessary memory use and pushes index to desired register
  */
-extern void I_map(Seq_T     other_segs, 
-                  Seq_T     available_indices, 
-                  uint32_t *dest, 
-                  uint32_t  num_words)
+extern void I_map(Seq_T other_segs, int available_index, uint32_t *dest, uint32_t num_words)
 {
     UArray_T mapped_arr = UArray_new(num_words, sizeof(uint32_t));
-    if (Seq_length(available_indices) != 0) {
-        int *recycled_index = (int *) Seq_remlo(available_indices);
-        Seq_put(other_segs, *recycled_index, mapped_arr);
-        *dest = *recycled_index;
-        FREE(recycled_index);
+    if (available_index != -1) {
+        // int *recycled_index = (int *) Seq_remlo(available_indices);
+        Seq_put(other_segs, available_index, mapped_arr);
+        *dest = available_index;
+        // FREE(recycled_index);
     }
     else {
         int new_index = Seq_length(other_segs);
@@ -109,16 +106,16 @@ extern void I_map(Seq_T     other_segs,
  * Removes desired segment and pushes index to available_indices for reuse
  * to maintain neccessary memory use
  */
-extern void I_unmap(Seq_T     other_segs, 
-                    Seq_T     available_indices, 
-                    uint32_t *source)
-{
-    int *free_index = ALLOC(sizeof(*free_index));
-    *free_index = *(int *) source;
-    UArray_T to_free = (UArray_T)Seq_put(other_segs, *source, NULL);
-    UArray_free(&to_free);
-    Seq_addhi(available_indices, free_index);
-}
+ extern void I_unmap(Seq_T     other_segs, 
+                     uint32_t *source)
+ {
+     // int *free_index = ALLOC(sizeof(*free_index));
+     // *free_index = *(int *) source;
+     UArray_T to_free = (UArray_T)Seq_put(other_segs, *source, NULL);
+     UArray_free(&(to_free));
+     //Seq_addhi(available_indices, free_index);
+
+ }
 
 /* Output 
  * Prints to standard out a value from a register
