@@ -38,7 +38,7 @@
  *       CREs: none
  *      Notes: none
  */
-extern void I_map(Seq_T other_segs, int  available_index, uint32_t *dest, uint32_t num_words);
+extern void I_map(Seq_T other_segs, uint32_t available_index, uint32_t *dest, uint32_t num_words);
 
 /* Unmap
  *    Purpose: Accesses the other segs array and removes a segment indicated by

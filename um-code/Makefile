@@ -56,6 +56,7 @@ test: um
 	time ./um ../umbin/sandmark.umz > ours.out
 	time um ../umbin/sandmark.umz > theirs.out
 	diff ours.out theirs.out
+	rm ours.out theirs.out
 
 testmain: test.o segment.o segmented_mem.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
