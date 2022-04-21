@@ -49,8 +49,17 @@ all: um
 
 ## Linking step (.o -> executable program)
 
-um: main.o prepare.o um_state.o instructions.o
+um: main.o segment.o prepare.o um_state.o instructions.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
+test: um
+	time ./um ../umbin/sandmark.umz > ours.out
+	time um ../umbin/sandmark.umz > theirs.out
+	diff ours.out theirs.out
+
+testmain: test.o segment.o segmented_mem.o
+	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+
 clean:
-	-rm -f um *.o
+	-rm -f um test *.o
