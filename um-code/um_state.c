@@ -241,7 +241,7 @@ void execute_instructions(size_t   *program_counter,
                 shouldContinue = false;
         }
     }
-    
+    free(recycled);
 }
 
 int expand(uint32_t **recycled, int capacity)
