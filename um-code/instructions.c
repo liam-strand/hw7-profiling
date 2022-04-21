@@ -23,6 +23,7 @@
 #include <uarray.h>
 
 #include "instructions.h"
+#include "segment.h"
 
 /* Map
  * Creates a new segment and utilizes recycling older (unmapped) segments
@@ -30,7 +31,7 @@
  */
 extern void I_map(Seq_T other_segs, int available_index, uint32_t *dest, uint32_t num_words)
 {
-    UArray_T mapped_arr = UArray_new(num_words, sizeof(uint32_t));
+    Seg_T mapped_arr = Seg_new(num_words);
     if (available_index != -1) {
         // int *recycled_index = (int *) Seq_remlo(available_indices);
         Seq_put(other_segs, available_index, mapped_arr);
@@ -53,8 +54,8 @@ extern void I_map(Seq_T other_segs, int available_index, uint32_t *dest, uint32_
  {
      // int *free_index = ALLOC(sizeof(*free_index));
      // *free_index = *(int *) source;
-     UArray_T to_free = (UArray_T)Seq_put(other_segs, *source, NULL);
-     UArray_free(&(to_free));
+     Seg_T to_free = (Seg_T)Seq_put(other_segs, *source, NULL);
+     Seg_free(&(to_free));
      //Seq_addhi(available_indices, free_index);
 
  }
@@ -64,18 +65,21 @@ extern void I_map(Seq_T other_segs, int available_index, uint32_t *dest, uint32_
  * Duplicates a desired segment and replaces the program segment, and 
  * shifts the program segment according to instruction
  */
-extern void I_load_p(uint32_t **prog_seg_p, Seq_T   oth_segs, uint32_t *reg_b, 
-                     uint32_t  *reg_c,      size_t *p_counter)
+extern void I_load_p(uint32_t **prog_seg_p, Seq_T oth_segs, uint32_t reg_b)
 {
-    if (*reg_b != 0) {
-        FREE(*prog_seg_p);
-        UArray_T to_copy = (UArray_T) Seq_get(oth_segs, *reg_b);
-        int len = UArray_length(to_copy);
-        uint32_t *new_prog = ALLOC(sizeof(*new_prog) * len);
-        for (int i = 0; i < len; i++) {
-            new_prog[i] = *(uint32_t *) UArray_at(to_copy, i);
-        }
-        *prog_seg_p = new_prog;
+    
+    free(*prog_seg_p);
+    Seg_T to_copy = (Seg_T) Seq_get(oth_segs, reg_b);
+    int len = Seg_len(to_copy);
+    uint32_t *new_prog = malloc(sizeof(*new_prog) * len);
+
+    if (new_prog == NULL) {
+        fprintf(stderr, "Error: Ran out of memory\n");
+        exit(EXIT_FAILURE);
     }
-    *p_counter = *reg_c;
+
+    for (int i = 0; i < len; i++) {
+        new_prog[i] = Seg_get(to_copy, i);
+    }
+    *prog_seg_p = new_prog;
 }

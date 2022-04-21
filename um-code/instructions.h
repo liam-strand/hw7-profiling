@@ -73,7 +73,6 @@ extern void I_unmap(Seq_T other_segs, uint32_t *source);
  *       CREs: none
  *      Notes: none
  */
-extern void I_load_p(uint32_t **prog_seg_p, Seq_T   oth_segs, uint32_t *reg_b, 
-                     uint32_t  *reg_c,      size_t *p_counter);
+extern void I_load_p(uint32_t **prog_seg_p, Seq_T   oth_segs, uint32_t reg_b);
 
 #endif /* INSTRUCTIONS_INCLUDED */
