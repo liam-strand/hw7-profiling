@@ -92,6 +92,10 @@ void execute_instructions(uint32_t **prog_seg,
     size_t program_counter = 0;
 
     uint32_t *recycled = malloc(sizeof(uint32_t) * 1000);
+    if (recycled == NULL) {
+        fprintf(stderr, "Error: out of memory\n");
+        exit(EXIT_FAILURE);
+    }
     
     while (shouldContinue) {
         // fprintf(stderr, "%lu\n", count++);
@@ -135,7 +139,6 @@ void execute_instructions(uint32_t **prog_seg,
                     default:
                         regs[ra] = Seg_get((Seg_T)Seq_get(other_segs, regs[rb]), regs[rc]);
                 }
-
                 break;
 
             /* Segmented Store */
@@ -151,8 +154,6 @@ void execute_instructions(uint32_t **prog_seg,
                     default:
                         Seg_set((Seg_T)Seq_get(other_segs, regs[ra]), regs[rb], regs[rc]);
                 }
-
-
                 break;
 
             /* Add */
@@ -196,14 +197,15 @@ void execute_instructions(uint32_t **prog_seg,
             case 8:
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                
-                if (num_recycled != 0) {
-                    //fprintf(stderr, "%d \n", num_recycled);
-                    num_recycled -= 1;
-                    I_map(other_segs, recycled[num_recycled], &regs[rb], regs[rc]);
-                } else {
-                    I_map(other_segs, -1, &regs[rb], regs[rc]);
+                switch (num_recycled) {
+                    case 0:
+                        I_map(other_segs, -1, &regs[rb], regs[rc]);
+                        break;
+                    default:
+                        num_recycled -= 1;
+                        I_map(other_segs, recycled[num_recycled], &regs[rb], regs[rc]);
                 }
+
                 
                 break;
 
@@ -305,7 +307,7 @@ void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p)
     assert(prog_seg_p   != NULL && *prog_seg_p   != NULL);
     assert(other_segs_p != NULL && *other_segs_p != NULL);
 
-    FREE(*prog_seg_p);
+    free(*prog_seg_p);
 
     deep_free_segs(*other_segs_p);
 
@@ -329,23 +331,6 @@ void deep_free_segs(Seq_T seq)
         Seg_T seg = (Seg_T)Seq_get(seq, i);
         if (seg != NULL) {
             Seg_free(&seg);
-        }
-    }
-}
-
-/* deep_free_int
- * Iterate through a Hanson sequence and free the ints referenced by the
- * sequence's elements. If an element is NULL, don't attempt to free!
- */
-void deep_free_int(Seq_T seq)
-{
-    assert(seq != NULL);
-
-    unsigned len = Seq_length(seq);
-    for (unsigned i = 0; i < len; i++) {
-        int *n = (int *)Seq_get(seq, i);
-        if (n != NULL) {
-            FREE(n);
         }
     }
 }

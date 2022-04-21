@@ -29,19 +29,18 @@
  * Creates a new segment and utilizes recycling older (unmapped) segments
  * to maintain neccessary memory use and pushes index to desired register
  */
-extern void I_map(Seq_T other_segs, int available_index, uint32_t *dest, uint32_t num_words)
+extern void I_map(Seq_T other_segs, uint32_t available_index, uint32_t *dest, uint32_t num_words)
 {
     Seg_T mapped_arr = Seg_new(num_words);
-    if (available_index != -1) {
-        // int *recycled_index = (int *) Seq_remlo(available_indices);
-        Seq_put(other_segs, available_index, mapped_arr);
-        *dest = available_index;
-        // FREE(recycled_index);
-    }
-    else {
-        int new_index = Seq_length(other_segs);
-        Seq_addhi(other_segs, mapped_arr);
-        *dest = new_index;
+    
+    switch (available_index) {
+        case -1:
+            Seq_addhi(other_segs, mapped_arr);
+            *dest = Seq_length(other_segs) - 1;
+            break;
+        default:
+            Seq_put(other_segs, available_index, mapped_arr);
+            *dest = available_index;
     }
 }
 
