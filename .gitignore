@@ -1,6 +1,7 @@
 # User Stuff
 um
 .DS_Store
+.vscode
 
 # Prerequisites
 *.d
