@@ -264,6 +264,8 @@ void execute_instructions(uint32_t **prog_seg,
         }
     }
     
+    free(recycled);
+    
 }
 
 int expand(uint32_t **recycled, int capacity)
