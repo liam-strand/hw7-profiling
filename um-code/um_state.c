@@ -26,25 +26,21 @@
 #include "prepare.h"
 #include "instructions.h"
 #include "segment.h"
+#include "segmented_mem.h"
 
 
-void execute_instructions(uint32_t **prog_seg,
-                          uint32_t *regs,
-                          Seq_T     other_segs);
+void execute_instructions(uint32_t       **prog_seg,
+                          uint32_t       *regs,
+                          Segmented_Mem_T other_segs);
 
-void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p);
+void clean_up(uint32_t **prog_seg_p, Segmented_Mem_T *other_segs_p);
 
 void unwrap_instruction(uint32_t  inst, uint32_t *op_p, uint32_t *ra_p,
                         uint32_t *rb_p, uint32_t *rc_p);
 
 void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value);
 
-void deep_free_segs(Seq_T seq);
-
-void deep_free_int(Seq_T seq);
-
 int expand(uint32_t **recycled, int capacity);
-
 
 static inline uint32_t Bitpack_getu(uint32_t word, unsigned width, unsigned lsb)
 {
@@ -65,8 +61,7 @@ extern void um_run(FILE *input_file, char *file_path)
 
     uint32_t r[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    Seq_T other_segs = Seq_new(5);
-    Seq_addlo(other_segs, NULL);
+    Segmented_Mem_T other_segs = Segments_New(5);
 
     execute_instructions(&prog_seg, r, other_segs);
 
@@ -80,9 +75,9 @@ extern void um_run(FILE *input_file, char *file_path)
  * 4. Increment the program counter
  * 3. Execute the command associated with the instruction
  */
-void execute_instructions(uint32_t **prog_seg,
-                          uint32_t *regs,
-                          Seq_T     other_segs)
+void execute_instructions(uint32_t       **prog_seg,
+                          uint32_t       *regs,
+                          Segmented_Mem_T other_segs)
 {
     bool shouldContinue = true;
     
@@ -137,7 +132,7 @@ void execute_instructions(uint32_t **prog_seg,
                         regs[ra] = (*prog_seg)[regs[rc]];
                         break;
                     default:
-                        regs[ra] = Seg_get((Seg_T)Seq_get(other_segs, regs[rb]), regs[rc]);
+                        regs[ra] = Segments_Get(other_segs, regs[rb], regs[rc]);
                 }
                 break;
 
@@ -152,7 +147,7 @@ void execute_instructions(uint32_t **prog_seg,
                         (*prog_seg)[regs[rb]] = regs[rc];
                         break;
                     default:
-                        Seg_set((Seg_T)Seq_get(other_segs, regs[ra]), regs[rb], regs[rc]);
+                        Segments_Put(other_segs, regs[ra], regs[rb], regs[rc]);
                 }
                 break;
 
@@ -199,14 +194,12 @@ void execute_instructions(uint32_t **prog_seg,
                 rc = Bitpack_getu(inst, 3,  0);
                 switch (num_recycled) {
                     case 0:
-                        I_map(other_segs, -1, &regs[rb], regs[rc]);
+                        regs[rb] = Segments_Map(other_segs, regs[rc], 0);
                         break;
                     default:
                         num_recycled -= 1;
-                        I_map(other_segs, recycled[num_recycled], &regs[rb], regs[rc]);
+                        regs[rb] = Segments_Map(other_segs, regs[rc], recycled[num_recycled]);
                 }
-
-                
                 break;
 
             /* Unmap Segment */
@@ -218,7 +211,7 @@ void execute_instructions(uint32_t **prog_seg,
                 }
                 
                 recycled[num_recycled++] = regs[rc];
-                I_unmap(other_segs, &regs[rc]);
+                Segments_Unmap(other_segs, regs[rc]);
                 break;
 
             /* Output */
@@ -302,35 +295,15 @@ void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value)
  * 3. Free the integers representing reusable segment identifiers
  * 4. Free the Hanson sequences
  */
-void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p)
+void clean_up(uint32_t **prog_seg_p, Segmented_Mem_T *other_segs_p)
 {
     assert(prog_seg_p   != NULL && *prog_seg_p   != NULL);
     assert(other_segs_p != NULL && *other_segs_p != NULL);
 
     free(*prog_seg_p);
 
-    deep_free_segs(*other_segs_p);
-
-    Seq_free(other_segs_p);
+    Segments_Free(other_segs_p);
 
     *prog_seg_p   = NULL;
     *other_segs_p = NULL;
-}
-
-/* deep_free_segs
- * Iterate through a Hanson sequence and free the UArrays referenced by the
- * sequence's elements. If an element is NULL, don't attempt to free!
- */
-void deep_free_segs(Seq_T seq)
-{
-    assert(seq != NULL);
-
-    unsigned len = Seq_length(seq);
-
-    for (unsigned i = 1; i < len; i++) {
-        Seg_T seg = (Seg_T)Seq_get(seq, i);
-        if (seg != NULL) {
-            Seg_free(&seg);
-        }
-    }
 }

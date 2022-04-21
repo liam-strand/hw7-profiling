@@ -20,41 +20,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <seq.h>
-
-
-/* Map
- *    Purpose: Creates a UArray and maps it either in an unmapped (recycled) 
- *             index or a new segment in sequence for non-zero segments
- *             and pushes the new index to destination register
- * Parameters: other_segs: sequence representing other segments
- *             available_indices: sequence representing unmapped segments of
- *               other_segs to map to first for recycling
- *             Number of words for new mapped segments
- *             Pointers too...
- *               - destination register
- *    Returns: none
- *    Effects: Adds a segment for access in other_segs
- *       CREs: none
- *      Notes: none
- */
-extern void I_map(Seq_T other_segs, uint32_t available_index, uint32_t *dest, uint32_t num_words);
-
-/* Unmap
- *    Purpose: Accesses the other segs array and removes a segment indicated by
- *             given register and adds this segment to available_indices to
- *             recycle later
- * Parameters: other_segs: sequence representing other segments
- *             available_indices: sequence representing unmapped segments of
- *               other_segs to map to first for recycling
- *             Pointers too...
- *               - source register
- *    Returns: none
- *    Effects: Removes a segment to make it inaccessible
- *       CREs: none
- *      Notes: none
- */
-extern void I_unmap(Seq_T other_segs, uint32_t *source);
+#include "segmented_mem.h"
 
 /* Load Program
  *    Purpose: Duplicates $m[$r[B]] (segment indicated by reg B) and 
@@ -73,6 +39,6 @@ extern void I_unmap(Seq_T other_segs, uint32_t *source);
  *       CREs: none
  *      Notes: none
  */
-extern void I_load_p(uint32_t **prog_seg_p, Seq_T   oth_segs, uint32_t reg_b);
+extern void I_load_p(uint32_t **prog_seg_p, Segmented_Mem_T oth_segs, uint32_t reg_b);
 
 #endif /* INSTRUCTIONS_INCLUDED */
