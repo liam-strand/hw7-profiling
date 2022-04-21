@@ -20,31 +20,26 @@
 #include <mem.h>
 #include <seq.h>
 #include <assert.h>
-// #include "bitpack.h"
 #include <uarray.h>
 
 #include "um_state.h"
 #include "prepare.h"
 #include "instructions.h"
+#include "segment.h"
 
 
-void execute_instructions(size_t   *program_counter,
-                          uint32_t **prog_seg,
+void execute_instructions(uint32_t **prog_seg,
                           uint32_t *regs,
-                          Seq_T     other_segs,
-                          Seq_T     available_indices);
+                          Seq_T     other_segs);
 
-void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p, Seq_T *recycled_p);
+void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p);
 
 void unwrap_instruction(uint32_t  inst, uint32_t *op_p, uint32_t *ra_p,
                         uint32_t *rb_p, uint32_t *rc_p);
 
 void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value);
 
-uint32_t *seg_source(uint32_t *prog_seg, Seq_T    other_segs,
-                     uint32_t  seg_num,  uint32_t seg_index);
-
-void deep_free_uarray(Seq_T seq);
+void deep_free_segs(Seq_T seq);
 
 void deep_free_int(Seq_T seq);
 
@@ -68,19 +63,14 @@ extern void um_run(FILE *input_file, char *file_path)
 {
     uint32_t *prog_seg = parse_file(input_file, file_path);
 
-    size_t prog_counter = 0;
-
     uint32_t r[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     Seq_T other_segs = Seq_new(5);
     Seq_addlo(other_segs, NULL);
 
-    Seq_T recycled_ids = Seq_new(5);
+    execute_instructions(&prog_seg, r, other_segs);
 
-    execute_instructions(&prog_counter, &prog_seg, r, other_segs,
-                                                      recycled_ids);
-
-    clean_up(&prog_seg, &other_segs, &recycled_ids);
+    clean_up(&prog_seg, &other_segs);
 }
 
 /* execute_instructions
@@ -90,24 +80,23 @@ extern void um_run(FILE *input_file, char *file_path)
  * 4. Increment the program counter
  * 3. Execute the command associated with the instruction
  */
-void execute_instructions(size_t   *program_counter,
-                          uint32_t **prog_seg,
+void execute_instructions(uint32_t **prog_seg,
                           uint32_t *regs,
-                          Seq_T     other_segs,
-                          Seq_T     available_indices)
+                          Seq_T     other_segs)
 {
     bool shouldContinue = true;
-    (void) available_indices;
     
     int capacity = 1000;
     int num_recycled = 0;
-    // size_t count = 0;
+    
+    size_t program_counter = 0;
+
     uint32_t *recycled = malloc(sizeof(uint32_t) * 1000);
     
     while (shouldContinue) {
         // fprintf(stderr, "%lu\n", count++);
         
-        uint32_t inst = (*prog_seg)[*program_counter];
+        uint32_t inst = (*prog_seg)[program_counter];
         
         
         
@@ -116,7 +105,7 @@ void execute_instructions(size_t   *program_counter,
         //unwrap_instruction(inst, &op, &ra, &rb, &rc);
         op = Bitpack_getu(inst, 4, 28);
 
-        (*program_counter)++;
+        program_counter++;
 
         switch(op) {
 
@@ -138,7 +127,15 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                regs[ra] = *seg_source(*prog_seg, other_segs, regs[rb], regs[rc]);
+
+                switch (regs[rb]) {
+                    case 0:
+                        regs[ra] = (*prog_seg)[regs[rc]];
+                        break;
+                    default:
+                        regs[ra] = Seg_get((Seg_T)Seq_get(other_segs, regs[rb]), regs[rc]);
+                }
+
                 break;
 
             /* Segmented Store */
@@ -146,7 +143,16 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                *seg_source(*prog_seg, other_segs, regs[ra],regs[rb]) = regs[rc];
+
+                switch (regs[ra]) {
+                    case 0:
+                        (*prog_seg)[regs[rb]] = regs[rc];
+                        break;
+                    default:
+                        Seg_set((Seg_T)Seq_get(other_segs, regs[ra]), regs[rb], regs[rc]);
+                }
+
+
                 break;
 
             /* Add */
@@ -195,8 +201,7 @@ void execute_instructions(size_t   *program_counter,
                     //fprintf(stderr, "%d \n", num_recycled);
                     num_recycled -= 1;
                     I_map(other_segs, recycled[num_recycled], &regs[rb], regs[rc]);
-                } 
-                else {
+                } else {
                     I_map(other_segs, -1, &regs[rb], regs[rc]);
                 }
                 
@@ -234,14 +239,22 @@ void execute_instructions(size_t   *program_counter,
             case 12:
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_load_p(prog_seg, other_segs, &regs[rb],
-                        &regs[rc], program_counter);
+
+                switch (regs[rb]) {
+                    case 0:
+                        break;
+                    default:
+                        I_load_p(prog_seg, other_segs, regs[rb]);
+                }
+
+                program_counter = regs[rc];
                 break;
 
             /* Load Value */
             case 13:
-                ra = Bitpack_getu(inst, 3, 25);
-                value  = Bitpack_getu(inst, 25, 0);
+                ra    = Bitpack_getu(inst, 3, 25);
+                value = Bitpack_getu(inst, 25, 0);
+
                 regs[ra] = value;
                 break;
             default:
@@ -281,64 +294,41 @@ void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value)
     *value  = Bitpack_getu(inst, 25, 0);
 }
 
-/* seg_source
- *  1. Determines if the desired memory is in the program segment or in another
- *     segment.
- * 2a. If the desired memory is in the program segment, return the address of
- *     the desired word.
- * 2b. If the desired memory is in another segment, get the segment, access the
- *     desired word in that segment, and return the address of that word.
- */
-uint32_t *seg_source(uint32_t *prog_seg, Seq_T    other_segs,
-                     uint32_t  seg_num,  uint32_t seg_index)
-{
-    if (seg_num == 0) {
-        return &prog_seg[seg_index];
-    } else {
-        UArray_T segment = (UArray_T)Seq_get(other_segs, seg_num);
-        return (uint32_t *)UArray_at(segment, seg_index);
-    }
-}
-
 /* clean_up
  * 1. Free the program segment
  * 2. Free other allocated segments
  * 3. Free the integers representing reusable segment identifiers
  * 4. Free the Hanson sequences
  */
-void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p, Seq_T *recycled_p)
+void clean_up(uint32_t **prog_seg_p, Seq_T *other_segs_p)
 {
     assert(prog_seg_p   != NULL && *prog_seg_p   != NULL);
     assert(other_segs_p != NULL && *other_segs_p != NULL);
-    assert(recycled_p   != NULL && *recycled_p   != NULL);
 
     FREE(*prog_seg_p);
 
-    deep_free_uarray(*other_segs_p);
-    deep_free_int(*recycled_p);
+    deep_free_segs(*other_segs_p);
 
     Seq_free(other_segs_p);
-    Seq_free(recycled_p);
 
     *prog_seg_p   = NULL;
     *other_segs_p = NULL;
-    *recycled_p   = NULL;
 }
 
-/* deep_free_uarray
+/* deep_free_segs
  * Iterate through a Hanson sequence and free the UArrays referenced by the
  * sequence's elements. If an element is NULL, don't attempt to free!
  */
-void deep_free_uarray(Seq_T seq)
+void deep_free_segs(Seq_T seq)
 {
     assert(seq != NULL);
 
     unsigned len = Seq_length(seq);
 
     for (unsigned i = 1; i < len; i++) {
-        UArray_T ua = (UArray_T)Seq_get(seq, i);
-        if (ua != NULL) {
-            UArray_free(&ua);
+        Seg_T seg = (Seg_T)Seq_get(seq, i);
+        if (seg != NULL) {
+            Seg_free(&seg);
         }
     }
 }
