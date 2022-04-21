@@ -101,10 +101,11 @@ void execute_instructions(size_t   *program_counter,
     
     int capacity = 1000;
     int num_recycled = 0;
-    
+    // size_t count = 0;
     uint32_t *recycled = malloc(sizeof(uint32_t) * 1000);
     
     while (shouldContinue) {
+        // fprintf(stderr, "%lu\n", count++);
         
         uint32_t inst = (*prog_seg)[*program_counter];
         
@@ -124,7 +125,12 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_c_mov(&regs[rb], &regs[ra], &regs[rc]);
+                switch (regs[rc]) {
+                    case 0:
+                        break;
+                    default:
+                        regs[ra] = regs[rb];
+                }
                 break;
 
             /* Segmented Load */
@@ -132,8 +138,7 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_seg_load(seg_source(*prog_seg, other_segs,
-                                      regs[rb], regs[rc]), &regs[ra]);
+                regs[ra] = *seg_source(*prog_seg, other_segs, regs[rb], regs[rc]);
                 break;
 
             /* Segmented Store */
@@ -141,9 +146,7 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_seg_store(&regs[rc],
-                            seg_source(*prog_seg, other_segs, regs[ra],
-                                                              regs[rb]));
+                *seg_source(*prog_seg, other_segs, regs[ra],regs[rb]) = regs[rc];
                 break;
 
             /* Add */
@@ -151,7 +154,7 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_add(&regs[rb], &regs[rc], &regs[ra]);
+                regs[ra] = regs[rb] + regs[rc];
                 break;
 
             /* Multiply */
@@ -159,7 +162,7 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_mult(&regs[rb], &regs[rc], &regs[ra]);
+                regs[ra] = regs[rb] * regs[rc];
                 break;
 
             /* Integer Divide */
@@ -167,7 +170,7 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_div(&regs[rb], &regs[rc], &regs[ra]);
+                regs[ra] = regs[rb] / regs[rc];
                 break;
 
             /* NAND */
@@ -175,7 +178,7 @@ void execute_instructions(size_t   *program_counter,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                I_nand(&regs[rb], &regs[rc], &regs[ra]);
+                regs[ra] = ~(regs[rb] & regs[rc]);
                 break;
 
             /* Break */
@@ -214,13 +217,17 @@ void execute_instructions(size_t   *program_counter,
             /* Output */
             case 10:
                 rc = Bitpack_getu(inst, 3,  0);
-                I_out(&regs[rc]);
+                if (regs[rc] >= 256) {
+                    fprintf(stderr, "Error, output out of range\n");
+                    exit(EXIT_FAILURE);
+                }
+                fputc(regs[rc], stdout);
                 break;
 
             /* Input */
             case 11:
                 rc = Bitpack_getu(inst, 3,  0);
-                I_in(&regs[rc]);
+                regs[rc] = (uint32_t)fgetc(stdin);
                 break;
 
             /* Load Program */
@@ -235,7 +242,7 @@ void execute_instructions(size_t   *program_counter,
             case 13:
                 ra = Bitpack_getu(inst, 3, 25);
                 value  = Bitpack_getu(inst, 25, 0);
-                I_load_v(value, &regs[ra]);
+                regs[ra] = value;
                 break;
             default:
                 shouldContinue = false;

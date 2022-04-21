@@ -24,64 +24,6 @@
 
 #include "instructions.h"
 
-/* Conditonal Move
- * Uses check to know if to move from one register to another
- */
-extern void I_c_mov(uint32_t *source, uint32_t *dest, uint32_t *check)
-{
-    if ((*check) != 0) {
-        *dest = *source;
-    }
-}
-
-/* Segment load
- * Moves instruction value from a segment to a register
- */
-extern void I_seg_load(uint32_t *source, uint32_t *dest)
-{
-    *dest = *source;
-}
-
-/* Segmented Store
- * Moves 32 bit number to a section of segment
- */
-extern void I_seg_store(uint32_t *source, uint32_t *dest)
-{
-    *dest = *source;
-}
-
-/* Addition
- * Adds the values of two registers and pushes to desired register
- */
-extern void I_add(uint32_t *reg_b, uint32_t *reg_c, uint32_t *dest)
-{
-    *dest = *reg_b + *reg_c;
-}
-
-/* Multilication
- * Multiplies the values of two registers and pushes to desired register
- */
-extern void I_mult(uint32_t *reg_b, uint32_t *reg_c, uint32_t *dest)
-{
-    *dest = ((*reg_b) * (*reg_c));
-}
-
-/* Divides
- * Divides the values of two registers and pushes to desired register
- */
-extern void I_div(uint32_t *reg_b, uint32_t *reg_c, uint32_t *dest)
-{
-    *dest = ((*reg_b) / (*reg_c));
-}
-
-/* Bitwise NAND
- * Nands the values of two registers and pushes to desired register
- */
-extern void I_nand(uint32_t *reg_b, uint32_t *reg_c, uint32_t *dest)
-{
-    *dest = ~((*reg_b) & (*reg_c));
-}
-
 /* Map
  * Creates a new segment and utilizes recycling older (unmapped) segments
  * to maintain neccessary memory use and pushes index to desired register
@@ -117,22 +59,6 @@ extern void I_map(Seq_T other_segs, int available_index, uint32_t *dest, uint32_
 
  }
 
-/* Output 
- * Prints to standard out a value from a register
- */
-extern void I_out(uint32_t *reg)
-{
-    assert(*reg < 256);
-    fputc(*reg, stdout);
-}
-
-/* Input
- * Takes standard in char value and pushes to a desired register
- */
-extern void I_in(uint32_t *reg)
-{
-    *reg = (uint32_t)fgetc(stdin);
-}
 
 /* Load program
  * Duplicates a desired segment and replaces the program segment, and 
@@ -152,12 +78,4 @@ extern void I_load_p(uint32_t **prog_seg_p, Seq_T   oth_segs, uint32_t *reg_b,
         *prog_seg_p = new_prog;
     }
     *p_counter = *reg_c;
-}
-
-/* Load Value
- * Moves a value into a desired register
- */
-extern void I_load_v(uint32_t value, uint32_t *dest_reg)
-{
-    *dest_reg = value;
 }
