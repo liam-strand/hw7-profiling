@@ -17,9 +17,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <assert.h>
-#include <mem.h>
-// #include "bitpack.h"
 
 #include "prepare.h"
 
@@ -28,16 +25,9 @@ static const unsigned BYTE_SIZE = 8;
 extern inline uint32_t Bitpack_newu(uint32_t word, unsigned width, unsigned lsb,
                       uint32_t value)
 {
-        // assert(width <= 64);
-        unsigned hi = lsb + width; /* one beyond the most significant bit */
-        // assert(hi <= 64);
-        // if (!Bitpack_fitsu(value, width))
-        //         RAISE(Bitpack_Overflow);
-        return ((word >> hi) << hi) |((word << (32 - lsb)) >> (32 - lsb)) | value << lsb;
-        //
-        // return shl(shr(word, hi), hi)                 /* high part */
-        //         | shr(shl(word, 32 - lsb), 32 - lsb)  /* low part  */
-        //         | (value << lsb);                     /* new part  */
+    unsigned hi = lsb + width;
+
+    return ((word >> hi) << hi) |((word << (32 - lsb)) >> (32 - lsb)) | value << lsb;
 }
 
 /* read_one_instruction
@@ -64,7 +54,12 @@ extern uint32_t *parse_file(FILE *input_file, char *file_path)
 
     size_t inst_count = buf.st_size / 4;
 
-    uint32_t *zero_seg = ALLOC(sizeof(uint32_t) * inst_count);
+    uint32_t *zero_seg = malloc(sizeof(*zero_seg) * inst_count);
+    if (zero_seg == NULL) {
+        fprintf(stderr, "Error: ran out of memory\n");
+        exit(EXIT_FAILURE);
+    }
+
 
     for (size_t i = 0; i < inst_count; i++) {
         zero_seg[i] = read_one_instruction(input_file);

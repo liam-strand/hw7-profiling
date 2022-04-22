@@ -11,7 +11,7 @@
 CC = gcc # The compiler being used
 
 # Updating include path to use Comp 40 .h files and CII interfaces
-IFLAGS = -I/comp/40/build/include -I/usr/sup/cii40/include/cii
+IFLAGS = 
 
 # Compile flags
 # Set debugging information, allow the c99 standard,
@@ -21,10 +21,10 @@ CFLAGS = -g3 -O2 -std=c99 -Wall -Wextra -Werror -Wfatal-errors -pedantic $(IFLAG
 # Linking flags
 # Set debugging information and update linking path
 # to include course binaries and CII implementations
-LDFLAGS = -g3 -O2 -L/comp/40/build/lib -L/usr/sup/cii40/lib64
+LDFLAGS = -g3 -O2 
 
 # Libraries needed for linking
-LDLIBS = -lcii40-O2 -lm
+LDLIBS =  -lm
 
 # Collect all .h files in your directory.
 # This way, you can never forget to add

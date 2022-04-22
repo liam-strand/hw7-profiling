@@ -18,8 +18,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <assert.h>
-
 #include "um_state.h"
 
 /* prepare_args

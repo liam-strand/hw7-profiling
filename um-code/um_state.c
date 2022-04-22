@@ -17,10 +17,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <mem.h>
-#include <seq.h>
-#include <assert.h>
-#include <uarray.h>
 
 #include "um_state.h"
 #include "prepare.h"
@@ -262,7 +258,6 @@ void execute_instructions(uint32_t       **prog_seg,
 int expand(uint32_t **recycled, int capacity)
 {
     *recycled = realloc(*recycled, (sizeof(uint32_t) * capacity * 2));
-    //assert(*recycled != NULL);
     return capacity * 2;
 }
 
@@ -297,8 +292,13 @@ void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value)
  */
 void clean_up(uint32_t **prog_seg_p, Segmented_Mem_T *other_segs_p)
 {
-    assert(prog_seg_p   != NULL && *prog_seg_p   != NULL);
-    assert(other_segs_p != NULL && *other_segs_p != NULL);
+    bool good_ptrs = (prog_seg_p   != NULL && *prog_seg_p   != NULL &&
+                      other_segs_p != NULL && *other_segs_p != NULL);
+
+    if (!good_ptrs) {
+        fprintf(stderr, "Error: clean_up passed nullptr\n");
+        exit(EXIT_FAILURE);
+    }
 
     free(*prog_seg_p);
 
