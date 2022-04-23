@@ -21,7 +21,7 @@ CFLAGS = -g3 -O2 -std=c99 -Wall -Wextra -Werror -Wfatal-errors -pedantic $(IFLAG
 # Linking flags
 # Set debugging information and update linking path
 # to include course binaries and CII implementations
-LDFLAGS = -g3 -O2 
+LDFLAGS = -g3 -O2
 
 # Libraries needed for linking
 LDLIBS =  -lm
@@ -49,7 +49,7 @@ all: um
 
 ## Linking step (.o -> executable program)
 
-um: main.o segment.o prepare.o um_state.o instructions.o segmented_mem.o
+um: main.o segment.o prepare.o um_state.o segmented_mem.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 test: um

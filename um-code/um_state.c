@@ -20,7 +20,6 @@
 
 #include "um_state.h"
 #include "prepare.h"
-#include "instructions.h"
 #include "segment.h"
 #include "segmented_mem.h"
 
@@ -235,7 +234,20 @@ void execute_instructions(uint32_t       **prog_seg,
                     case 0:
                         break;
                     default:
-                        I_load_p(prog_seg, other_segs, regs[rb]);
+                        free(*prog_seg);
+                        Seg_T to_copy = Segments_Access(other_segs, regs[rb]);
+                        int len = Seg_len(to_copy);
+                        uint32_t *new_prog = malloc(sizeof(*new_prog) * len);
+
+                        if (new_prog == NULL) {
+                            fprintf(stderr, "Error: Ran out of memory\n");
+                            exit(EXIT_FAILURE);
+                        }
+
+                        for (int i = 0; i < len; i++) {
+                            new_prog[i] = Seg_get(to_copy, i);
+                        }
+                        *prog_seg = new_prog;
                 }
 
                 program_counter = regs[rc];
