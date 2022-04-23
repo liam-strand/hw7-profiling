@@ -30,12 +30,11 @@ void execute_instructions(uint32_t       **prog_seg,
 
 void clean_up(uint32_t **prog_seg_p, Segmented_Mem_T *other_segs_p);
 
-void unwrap_instruction(uint32_t  inst, uint32_t *op_p, uint32_t *ra_p,
-                        uint32_t *rb_p, uint32_t *rc_p);
-
-void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value);
-
-int expand(uint32_t **recycled, int capacity);
+static inline int expand(uint32_t **recycled, int capacity)
+{
+    *recycled = realloc(*recycled, (sizeof(uint32_t) * capacity * 2));
+    return capacity * 2;
+}
 
 static inline uint32_t Bitpack_getu(uint32_t word, unsigned width, unsigned lsb)
 {
@@ -265,35 +264,6 @@ void execute_instructions(uint32_t       **prog_seg,
         }
     }
     free(recycled);
-}
-
-int expand(uint32_t **recycled, int capacity)
-{
-    *recycled = realloc(*recycled, (sizeof(uint32_t) * capacity * 2));
-    return capacity * 2;
-}
-
-/* unwrap_instruction
- * Un-bitpack the opcode and the three registers and store in referenced
- * locations.
- */
-void unwrap_instruction(uint32_t inst, uint32_t *op_p, uint32_t *ra_p,
-                             uint32_t *rb_p, uint32_t *rc_p)
-{
-    *op_p = Bitpack_getu(inst, 4, 28);
-    *ra_p = Bitpack_getu(inst, 3,  6);
-    *rb_p = Bitpack_getu(inst, 3,  3);
-    *rc_p = Bitpack_getu(inst, 3,  0);
-}
-
-/* prepare_lv
- * The special un-bitpack for the load value instruction. Un-bitpacks the
- * destination register and the loading value, stores in referenced variables.
- */
-void prepare_lv(uint32_t inst, uint32_t *reg_id, uint32_t *value)
-{
-    *reg_id = Bitpack_getu(inst, 3, 25);
-    *value  = Bitpack_getu(inst, 25, 0);
 }
 
 /* clean_up
