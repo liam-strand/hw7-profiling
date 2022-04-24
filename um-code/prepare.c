@@ -14,13 +14,17 @@
 
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include "prepare.h"
 
-static const unsigned BYTE_SIZE = 8;
+typedef union Word {
+    uint32_t integer;
+    unsigned char str[4]; 
+} Word;
 
 /* read_one_instruction
  *    Purpose: Reads chars from input file and pushes 32-bit encoded as output
@@ -35,17 +39,14 @@ static const unsigned BYTE_SIZE = 8;
  */
 static inline uint32_t read_one_instruction(FILE *input_file)
 {
-    register uint32_t inst = 0;
+    Word inst;
 
     for (int i = 3; i >= 0; i--) {
         unsigned char byte = fgetc(input_file);
-        uint32_t lsb = i * BYTE_SIZE;
-        inst = (((inst >> (lsb + BYTE_SIZE)) << (lsb + BYTE_SIZE)) 
-                | ((inst << (32 - lsb)) >> (32 - lsb)) 
-                | byte << lsb);
+        inst.str[i] = byte;
     }
 
-    return inst;
+    return inst.integer;
 }
 
 /* parse_file
