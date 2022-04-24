@@ -22,14 +22,6 @@
 
 static const unsigned BYTE_SIZE = 8;
 
-extern inline uint32_t Bitpack_newu(uint32_t word, unsigned width, unsigned lsb,
-                      uint32_t value)
-{
-    unsigned hi = lsb + width;
-
-    return ((word >> hi) << hi) |((word << (32 - lsb)) >> (32 - lsb)) | value << lsb;
-}
-
 /* read_one_instruction
  *    Purpose: Reads chars from input file and pushes 32-bit encoded as output
  * Parameters: Pointers too...
@@ -41,7 +33,20 @@ extern inline uint32_t Bitpack_newu(uint32_t word, unsigned width, unsigned lsb,
  *      Notes: Utilizes bitpack interface to create code words from characters
  *
  */
-uint32_t read_one_instruction(FILE *input_file);
+static inline uint32_t read_one_instruction(FILE *input_file)
+{
+    register uint32_t inst = 0;
+
+    for (int i = 3; i >= 0; i--) {
+        unsigned char byte = fgetc(input_file);
+        uint32_t lsb = i * BYTE_SIZE;
+        inst = (((inst >> (lsb + BYTE_SIZE)) << (lsb + BYTE_SIZE)) 
+                | ((inst << (32 - lsb)) >> (32 - lsb)) 
+                | byte << lsb);
+    }
+
+    return inst;
+}
 
 /* parse_file
  * Goes through input file and pushes instructions to add to zero segment
@@ -72,14 +77,4 @@ extern uint32_t *parse_file(FILE *input_file, char *file_path)
  * Reads one instruction (4 bytes) from the opened FILE pointer, bitpacks it
  * into a uint32, then returns it
  */
-uint32_t read_one_instruction(FILE *input_file)
-{
-    uint32_t inst = 0;
 
-    for (int i = 3; i >= 0; i--) {
-        unsigned char byte = fgetc(input_file);
-        inst = Bitpack_newu(inst, BYTE_SIZE, i * BYTE_SIZE, byte);
-    }
-
-    return inst;
-}
