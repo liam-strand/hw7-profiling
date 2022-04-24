@@ -55,7 +55,7 @@ extern void um_run(FILE *input_file, char *file_path)
 
     uint32_t r[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    Segmented_Mem_T other_segs = Segments_New(5);
+    Segmented_Mem_T other_segs = Segments_New(100000);
 
     execute_instructions(&prog_seg, r, other_segs);
 
