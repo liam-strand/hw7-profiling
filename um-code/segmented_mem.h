@@ -13,7 +13,7 @@ typedef struct Segmented_Mem_T {
     size_t  capacity;
 } *Segmented_Mem_T;
 
-Segmented_Mem_T Segments_New(unsigned hint)
+static inline Segmented_Mem_T Segments_New(unsigned hint)
 {
     Segmented_Mem_T mem = malloc(sizeof(*mem));
     mem->segs = malloc(sizeof(Seg_T) * hint);
@@ -32,7 +32,7 @@ Segmented_Mem_T Segments_New(unsigned hint)
     return mem;
 }
 
-void Segments_Free(Segmented_Mem_T *mem_p)
+static inline void Segments_Free(Segmented_Mem_T *mem_p)
 {
     Segmented_Mem_T my_segs = *mem_p;
     for (size_t i = 1; i < my_segs->len; i++) {
@@ -45,26 +45,27 @@ void Segments_Free(Segmented_Mem_T *mem_p)
     free(my_segs);
     *mem_p = NULL;
 }
-Seg_T Segments_Access(Segmented_Mem_T mem, uint32_t seg_id)
+static inline Seg_T Segments_Access(Segmented_Mem_T mem, uint32_t seg_id)
 {
     return mem->segs[seg_id];
 }
 
-uint32_t Segments_Get(Segmented_Mem_T mem, uint32_t seg_id, uint32_t idx)
+static inline uint32_t Segments_Get(Segmented_Mem_T mem, uint32_t seg_id, uint32_t idx)
 {
     return mem->segs[seg_id][idx + 1];
 }
-void Segments_Put(Segmented_Mem_T mem, uint32_t seg_id, uint32_t idx, uint32_t value)
+
+static inline void Segments_Put(Segmented_Mem_T mem, uint32_t seg_id, uint32_t idx, uint32_t value)
 {
     mem->segs[seg_id][idx + 1] = value;
 }
 
-uint32_t Segments_Size(Segmented_Mem_T mem, uint32_t seg_id)
+static inline uint32_t Segments_Size(Segmented_Mem_T mem, uint32_t seg_id)
 {
     return Seg_len(mem->segs[seg_id]);
 }
 
-uint32_t Segments_Map(Segmented_Mem_T mem, uint32_t size, size_t index)
+static inline uint32_t Segments_Map(Segmented_Mem_T mem, uint32_t size, size_t index)
 {
     if (index == 0) {
         if (mem->capacity == mem->len) {
@@ -94,7 +95,7 @@ uint32_t Segments_Map(Segmented_Mem_T mem, uint32_t size, size_t index)
     }
 }
 
-void Segments_Unmap(Segmented_Mem_T mem, uint32_t seg_id)
+static inline void Segments_Unmap(Segmented_Mem_T mem, uint32_t seg_id)
 {
     free(mem->segs[seg_id]);
     mem->segs[seg_id] = NULL;
