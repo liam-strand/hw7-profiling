@@ -107,11 +107,8 @@ void execute_instructions(uint32_t       **prog_seg,
                 ra = Bitpack_getu(inst, 3,  6);
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                switch (regs[rc]) {
-                    case 0:
-                        break;
-                    default:
-                        regs[ra] = regs[rb];
+                if (regs[rc] != 0) {
+                    regs[ra] = regs[rb];
                 }
                 break;
 
@@ -121,12 +118,10 @@ void execute_instructions(uint32_t       **prog_seg,
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
 
-                switch (regs[rb]) {
-                    case 0:
-                        regs[ra] = (*prog_seg)[regs[rc]];
-                        break;
-                    default:
-                        regs[ra] = Segments_Get(other_segs, regs[rb], regs[rc]);
+                if (regs[rb] == 0) {
+                    regs[ra] = (*prog_seg)[regs[rc]];
+                } else {
+                    regs[ra] = Segments_Get(other_segs, regs[rb], regs[rc]);
                 }
                 break;
 
@@ -136,12 +131,10 @@ void execute_instructions(uint32_t       **prog_seg,
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
 
-                switch (regs[ra]) {
-                    case 0:
-                        (*prog_seg)[regs[rb]] = regs[rc];
-                        break;
-                    default:
-                        Segments_Put(other_segs, regs[ra], regs[rb], regs[rc]);
+                if (regs[ra] == 0) {
+                    (*prog_seg)[regs[rb]] = regs[rc];
+                } else {
+                    Segments_Put(other_segs, regs[ra], regs[rb], regs[rc]);
                 }
                 break;
 
@@ -186,13 +179,11 @@ void execute_instructions(uint32_t       **prog_seg,
             case 8:
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
-                switch (num_recycled) {
-                    case 0:
-                        regs[rb] = Segments_Map(other_segs, regs[rc], 0);
-                        break;
-                    default:
-                        num_recycled -= 1;
-                        regs[rb] = Segments_Map(other_segs, regs[rc], recycled[num_recycled]);
+                if (num_recycled == 0) {
+                    regs[rb] = Segments_Map(other_segs, regs[rc], 0);
+                } else {
+                    num_recycled -= 1;
+                    regs[rb] = Segments_Map(other_segs, regs[rc], recycled[num_recycled]);
                 }
                 break;
 
@@ -229,24 +220,21 @@ void execute_instructions(uint32_t       **prog_seg,
                 rb = Bitpack_getu(inst, 3,  3);
                 rc = Bitpack_getu(inst, 3,  0);
 
-                switch (regs[rb]) {
-                    case 0:
-                        break;
-                    default:
-                        free(*prog_seg);
-                        Seg_T to_copy = Segments_Access(other_segs, regs[rb]);
-                        int len = Seg_len(to_copy);
-                        uint32_t *new_prog = malloc(sizeof(*new_prog) * len);
+                if (regs[rb] != 0) {
+                    free(*prog_seg);
+                    Seg_T to_copy = Segments_Access(other_segs, regs[rb]);
+                    int len = Seg_len(to_copy);
+                    uint32_t *new_prog = malloc(sizeof(*new_prog) * len);
 
-                        if (new_prog == NULL) {
-                            fprintf(stderr, "Error: Ran out of memory\n");
-                            exit(EXIT_FAILURE);
-                        }
+                    if (new_prog == NULL) {
+                        fprintf(stderr, "Error: Ran out of memory\n");
+                        exit(EXIT_FAILURE);
+                    }
 
-                        for (int i = 0; i < len; i++) {
-                            new_prog[i] = Seg_get(to_copy, i);
-                        }
-                        *prog_seg = new_prog;
+                    for (int i = 0; i < len; i++) {
+                        new_prog[i] = Seg_get(to_copy, i);
+                    }
+                    *prog_seg = new_prog;
                 }
 
                 program_counter = regs[rc];
