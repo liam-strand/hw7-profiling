@@ -79,7 +79,6 @@ static inline uint32_t Segments_Map(Segmented_Mem_T mem, uint32_t size, size_t i
 
             free(mem->segs);
             mem->segs = new_segs;
-            // mem->segs = realloc(mem->segs, sizeof(Seg_T) * mem->capacity);
         }
 
         mem->segs[mem->len] = Seg_new(size);
