@@ -1,0 +1,39 @@
+README
+
+HW 7 - Profiling
+
+Liam Strand (lstran01) Matt Ung    (mung01)
+
+Acknowledgements;
+
+For ideas and abstract brainstorming: 
+- Cece Crumlish 
+- Ayda Aricanli 
+- Isabella Urdahl 
+- Jackson Parcells 
+- Elizabeth Foster 
+- Skylar Gilfeather
+- Michael Simpson
+
+For speedy help: 
+- Leona 
+- Tina
+
+The routine that adds a segment to the memory structure consumes most of
+the execution time of the program. The case where a segment identifier
+can be resused is very speedy, but the case where a new segment must be
+allocated is *not* optimized very well. That case requires more amd64
+instructions than are required by all the other cases of all the other
+um instructions.
+
+Although this routine is more complicated than others in this program,
+the memory data structure is a pointer-to-struct type, which means that
+accessing elements of the struct required dereferences. Furthrmore, the
+memory segments are stored in a private array, which means that accessing
+a location in segemented memory requires at least two dereferences.
+
+We spent  6 hours analyzing the problem.  We spent 10 hours solving
+the problem.
+
+On a personal note, this was a really fun assignment! We are glad we
+had the opportunity to squeze performance out of our program.
